@@ -65,12 +65,16 @@
 
 				window.console = consoleProxy;
 
-				window.onerror = (ev) => {
+				window.onerror = (message, url, line, col, errorMessage) => {
+					console.log(args);
 					window.parent.postMessage(
 						{
 							type: "unhandlederror",
-							reason: ev.reason,
-							promise: ev.promise,
+							message,
+							url,
+							line,
+							col,
+							errorMessage,
 						},
 						"*"
 					);
