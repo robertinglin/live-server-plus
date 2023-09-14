@@ -3,7 +3,6 @@ var fs = require("fs"),
 	connect = require("connect"),
 	serveIndex = require("serve-index"),
 	logger = require("morgan"),
-	WebSocket = require("faye-websocket"),
 	path = require("path"),
 	url = require("url"),
 	http = require("http"),
@@ -12,6 +11,9 @@ var fs = require("fs"),
 	es = require("event-stream"),
 	os = require("os"),
 	chokidar = require("chokidar");
+
+const { Server } = require("socket.io");
+
 require("colors");
 
 var INJECTED_CODE = fs.readFileSync(
@@ -303,6 +305,7 @@ LiveServer.start = function (options) {
 		server = http.createServer(app);
 		protocol = "http";
 	}
+	var io = new Server(server);
 
 	// Handle server startup errors
 	server.addListener("error", function (e) {
@@ -391,35 +394,12 @@ LiveServer.start = function (options) {
 	// Setup server to listen at port
 	server.listen(port, host);
 
-	// WebSocket
-	var clients = [];
-	server.addListener("upgrade", function (request, socket, head) {
-		var ws = new WebSocket(request, socket, head);
-		ws.onopen = function () {
-			ws.send("connected");
-		};
-
-		if (wait > 0) {
-			(function () {
-				var wssend = ws.send;
-				var waitTimeout;
-				ws.send = function () {
-					var args = arguments;
-					if (waitTimeout) clearTimeout(waitTimeout);
-					waitTimeout = setTimeout(function () {
-						wssend.apply(ws, args);
-					}, wait);
-				};
-			})();
-		}
-
-		ws.onclose = function () {
-			clients = clients.filter(function (x) {
-				return x !== ws;
-			});
-		};
-
-		clients.push(ws);
+	var client_sockets = [];
+	io.on("connection", (socket) => {
+		client_sockets.push(socket);
+		socket.on("disconnect", () => {
+			client_sockets = client_sockets.filter((s) => s !== socket);
+		});
 	});
 
 	var ignored = [
@@ -449,7 +429,7 @@ LiveServer.start = function (options) {
 				console.log("CSS change detected".magenta, changePath);
 			else console.log("Change detected".cyan, changePath);
 		}
-		clients.forEach(function (ws) {
+		client_sockets.forEach(function (ws) {
 			if (ws) ws.send(cssChange ? "refreshcss" : "reload");
 		});
 	}

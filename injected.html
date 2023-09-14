@@ -1,4 +1,10 @@
 <!-- Code injected by live-server -->
+<script
+	src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"
+	integrity="sha512-zoJXRvW2gC8Z0Xo3lBbao5+AS3g6YWr5ztKqaicua11xHo+AvE1b0lT9ODgrHTmNUxeCw0Ry4BGRYZfXu70weg=="
+	crossorigin="anonymous"
+	referrerpolicy="no-referrer"
+></script>
 <script type="text/javascript">
 	// <![CDATA[  <-- For SVG support
 	if ("WebSocket" in window) {
@@ -56,25 +62,18 @@
 					head.appendChild(elem);
 				}
 			}
-			var protocol =
-				window.location.protocol === "http:" ? "ws://" : "wss://";
-			var pathname = window.location.pathname;
-			if (pathname.endsWith("/")) {
-				pathname = pathname.split("/").slice(-1);
-			}
-			var address =
-				protocol +
-				window.location.host +
-				(window.location.pathname.endsWith("/")
-					? window.location.pathname.slice(0, -1)
-					: window.location.pathname) +
-				"/ws";
 
-			var socket = new WebSocket(address);
-			socket.onmessage = function (msg) {
-				if (msg.data == "reload") window.location.reload();
-				else if (msg.data == "refreshcss") refreshCSS();
-			};
+			const socket = io();
+			socket.on("message", (data) => {
+				if (data === "reload") window.location.reload();
+				else if (data === "refreshcss") refreshCSS();
+			});
+
+			// var socket = new WebSocket(address);
+			// socket.onmessage = function (msg) {
+			// 	if (msg.data == "reload") window.location.reload();
+			// 	else if (msg.data == "refreshcss") refreshCSS();
+			// };
 			console.log("Live reload enabled.");
 		})();
 	}
