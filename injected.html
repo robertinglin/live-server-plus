@@ -48,7 +48,6 @@
 			// 	if (msg.data == "reload") window.location.reload();
 			// 	else if (msg.data == "refreshcss") refreshCSS();
 			// };
-			console.log("Live reload enabled.");
 
 			if (window.parent.postMessage) {
 				const consoleProxy = new Proxy(console, {
@@ -78,6 +77,13 @@
 						"*"
 					);
 				};
+
+				window.parent.postMessage(
+					{
+						type: "live-server-active",
+					},
+					"*"
+				);
 			}
 		})();
 	}
