@@ -379,6 +379,7 @@ LiveServer.start = function (options) {
 					serveURL
 				);
 		}
+		console.log("live-server-plus-active");
 
 		// Launch browser
 		if (openPath !== null)
